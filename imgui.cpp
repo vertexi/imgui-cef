@@ -6207,62 +6207,39 @@ ImGuiStorage* ImGui::GetStateStorage()
     return window->DC.StateStorage;
 }
 
+void ImGui::TextV2(const char* fmt, va_list args)
+{
+    ImGuiWindow* window = GetCurrentWindow();
+    if (window->SkipItems)
+        return;
+
+    ImGuiContext& g = *GImGui;
+    const char* text_end = g.TempBuffer + ImFormatStringV(g.TempBuffer, IM_ARRAYSIZE(g.TempBuffer), fmt, args);
+    TextUnformatted2(g.TempBuffer, text_end);
+}
+void ImGui::Text2(const ImVec4& col, const char* fmt, ...)
+{
+    PushStyleColor(ImGuiCol_Text, col);
+    va_list args;
+    va_start(args, fmt);
+    TextV2(fmt, args);
+    va_end(args);
+    PopStyleColor();
+}
+
 void ImGui::PushID(const char* str_id)
 {
     ImGuiWindow* window = GetCurrentWindowRead();
     window->IDStack.push_back(window->GetIDNoKeepAlive(str_id));
 }
-void ImGui::TextV2(const char* fmt, va_list args)
-{
-	ImGuiWindow* window = GetCurrentWindow();
-	if (window->SkipItems)
-		return;
-
-	ImGuiContext& g = *GImGui;
-	const char* text_end = g.TempBuffer + ImFormatStringV(g.TempBuffer, IM_ARRAYSIZE(g.TempBuffer), fmt, args);
-	TextUnformatted2(g.TempBuffer, text_end);
-}
-
-
 
 void ImGui::PushID(const char* str_id_begin, const char* str_id_end)
-{
-	ImGuiWindow* window = GetCurrentWindow();
-	if (window->SkipItems)
-		return;
-
-	ImGuiContext& g = *GImGui;
-	const char* text_end = g.TempBuffer + ImFormatStringV(g.TempBuffer, IM_ARRAYSIZE(g.TempBuffer), fmt, args);
-	TextUnformatted2(g.TempBuffer, text_end);
-}
-
 {
     ImGuiWindow* window = GetCurrentWindowRead();
     window->IDStack.push_back(window->GetIDNoKeepAlive(str_id_begin, str_id_end));
 }
 
-void ImGui::Text2(const ImVec4& col, const char* fmt, ...)
-{
-	PushStyleColor(ImGuiCol_Text, col);
-	va_list args;
-	va_start(args, fmt);	
-	TextV2(fmt, args);	
-	va_end(args);
-	PopStyleColor();
-}
-
-
-
 void ImGui::PushID(const void* ptr_id)
-{
-	PushStyleColor(ImGuiCol_Text, col);
-	va_list args;
-	va_start(args, fmt);	
-	TextV2(fmt, args);	
-	va_end(args);
-	PopStyleColor();
-}
-
 {
     ImGuiWindow* window = GetCurrentWindowRead();
     window->IDStack.push_back(window->GetIDNoKeepAlive(ptr_id));
