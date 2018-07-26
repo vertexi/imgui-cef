@@ -6212,14 +6212,57 @@ void ImGui::PushID(const char* str_id)
     ImGuiWindow* window = GetCurrentWindowRead();
     window->IDStack.push_back(window->GetIDNoKeepAlive(str_id));
 }
+void ImGui::TextV2(const char* fmt, va_list args)
+{
+	ImGuiWindow* window = GetCurrentWindow();
+	if (window->SkipItems)
+		return;
+
+	ImGuiContext& g = *GImGui;
+	const char* text_end = g.TempBuffer + ImFormatStringV(g.TempBuffer, IM_ARRAYSIZE(g.TempBuffer), fmt, args);
+	TextUnformatted2(g.TempBuffer, text_end);
+}
+
+
 
 void ImGui::PushID(const char* str_id_begin, const char* str_id_end)
+{
+	ImGuiWindow* window = GetCurrentWindow();
+	if (window->SkipItems)
+		return;
+
+	ImGuiContext& g = *GImGui;
+	const char* text_end = g.TempBuffer + ImFormatStringV(g.TempBuffer, IM_ARRAYSIZE(g.TempBuffer), fmt, args);
+	TextUnformatted2(g.TempBuffer, text_end);
+}
+
 {
     ImGuiWindow* window = GetCurrentWindowRead();
     window->IDStack.push_back(window->GetIDNoKeepAlive(str_id_begin, str_id_end));
 }
 
+void ImGui::Text2(const ImVec4& col, const char* fmt, ...)
+{
+	PushStyleColor(ImGuiCol_Text, col);
+	va_list args;
+	va_start(args, fmt);	
+	TextV2(fmt, args);	
+	va_end(args);
+	PopStyleColor();
+}
+
+
+
 void ImGui::PushID(const void* ptr_id)
+{
+	PushStyleColor(ImGuiCol_Text, col);
+	va_list args;
+	va_start(args, fmt);	
+	TextV2(fmt, args);	
+	va_end(args);
+	PopStyleColor();
+}
+
 {
     ImGuiWindow* window = GetCurrentWindowRead();
     window->IDStack.push_back(window->GetIDNoKeepAlive(ptr_id));
@@ -6257,6 +6300,30 @@ bool ImGui::IsRectVisible(const ImVec2& size)
 {
     ImGuiWindow* window = GetCurrentWindowRead();
     return window->ClipRect.Overlaps(ImRect(window->DC.CursorPos, window->DC.CursorPos + size));
+}
+
+void ImGui::TextUnformatted2(const char* text, const char* text_end)
+{
+	ImGuiWindow* window = GetCurrentWindow();
+	if (window->SkipItems)
+		return;
+
+	ImGuiContext& g = *GImGui;
+	IM_ASSERT(text != NULL);
+	const char* text_begin = text;
+	if (text_end == NULL)
+		text_end = text + strlen(text); // FIXME-OPT
+										
+	const ImRect clip_rect = window->ClipRect;
+	const float wrap_width = 0.0f;
+	const ImVec2 text_size = CalcTextSize(text_begin, text_end, false, wrap_width);
+
+	const ImVec2 text_pos(window->DC.CursorPos.x + clip_rect.GetWidth() - text_size.x - g.FontSize, window->DC.CursorPosPrevLine.y); 
+	const float wrap_pos_x = window->DC.TextWrapPos;
+	const bool wrap_enabled = wrap_pos_x >= 0.0f;
+	ImRect bb(text_pos, text_pos + text_size);
+
+	RenderTextWrapped(bb.Min, text_begin, text_end, wrap_width);
 }
 
 bool ImGui::IsRectVisible(const ImVec2& rect_min, const ImVec2& rect_max)
@@ -7245,6 +7312,52 @@ ImVec2 ImGui::GetNavInputAmount2d(ImGuiNavDirSourceFlags dir_sources, ImGuiInput
     if (fast_factor != 0.0f && IsNavInputDown(ImGuiNavInput_TweakFast))
         delta *= fast_factor;
     return delta;
+}
+
+
+
+bool ImGui::MenuItem2(const char* label, const char* rightText, bool selected, bool enabled, ImVec4 color)
+{
+	ImGui::PushItemFlag(ImGuiItemFlags_SelectableDontClosePopup, true);
+	ImGuiWindow* window = GetCurrentWindow();
+	if (window->SkipItems)
+		return false;
+
+	ImGuiContext& g = *GImGui;
+	ImGuiStyle& style = g.Style;
+	ImVec2 pos = window->DC.CursorPos;
+	ImVec2 label_size = CalcTextSize(label, NULL, true);
+
+	ImGuiSelectableFlags flags = ImGuiSelectableFlags_PressedOnRelease | (enabled ? 0 : ImGuiSelectableFlags_Disabled);
+	bool pressed;
+	if (window->DC.LayoutType == ImGuiLayoutType_Horizontal)
+	{
+		// Mimic the exact layout spacing of BeginMenu() to allow MenuItem() inside a menu bar, which is a little misleading but may be useful
+		// Note that in this situation we render neither the shortcut neither the selected tick mark
+		float w = label_size.x;
+		window->DC.CursorPos.x += (float)(int)(style.ItemSpacing.x * 0.5f);
+		PushStyleVar(ImGuiStyleVar_ItemSpacing, style.ItemSpacing * 2.0f);
+		pressed = Selectable(label, false, flags, ImVec2(w, 0.0f));
+		PopStyleVar();
+		window->DC.CursorPos.x += (float)(int)(style.ItemSpacing.x * (-1.0f + 0.5f)); // -1 spacing to compensate the spacing added when Selectable() did a SameLine(). It would also work to call SameLine() ourselves after the PopStyleVar().
+	}
+	else
+	{
+		ImVec2 shortcut_size = rightText ? CalcTextSize(rightText, NULL) : ImVec2(0.0f, 0.0f);
+		float w = window->MenuColumns.DeclColumns(label_size.x, shortcut_size.x, (float)(int)(g.FontSize * 1.20f)); // Feedback for next frame
+		float extra_w = ImMax(0.0f, GetContentRegionAvail().x - w);
+		pressed = Selectable(label, false, flags | ImGuiSelectableFlags_DrawFillAvailWidth, ImVec2(w, 0.0f));
+		if (shortcut_size.x > 0.0f)
+		{
+			PushStyleColor(ImGuiCol_Text, color);
+			RenderText(pos + ImVec2(window->MenuColumns.Pos[1] + extra_w, 0.0f), rightText, NULL, false);
+			PopStyleColor();
+		}
+		if (selected)
+			RenderCheckMark(pos + ImVec2(window->MenuColumns.Pos[2] + extra_w + g.FontSize * 0.40f, g.FontSize * 0.134f * 0.5f), GetColorU32(enabled ? ImGuiCol_Text : ImGuiCol_TextDisabled), g.FontSize  * 0.866f);
+	}
+	ImGui::PopItemFlag();
+	return pressed;
 }
 
 // Scroll to keep newly navigated item fully into view
