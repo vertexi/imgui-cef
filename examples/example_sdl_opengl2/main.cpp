@@ -12,10 +12,16 @@
 #include <stdio.h>
 #include <SDL.h>
 #include <SDL_opengl.h>
+#include <cef_app.h>
 
 // Main code
 int main(int, char**)
 {
+    // Setup CEF
+    int cefResult = ImGui_ImplSDL2_CefInit(argc, argv);
+    if (cefResult >= 0)
+        return cefResult;
+
     // Setup SDL
     // (Some versions of SDL before <2.0.10 appears to have performance/stalling issues on a minority of Windows systems,
     // depending on whether SDL_INIT_GAMECONTROLLER is enabled or disabled.. updating to latest version of SDL is recommended!)
@@ -67,6 +73,7 @@ int main(int, char**)
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != NULL);
 
+    bool show_in_game_browser_window = true;
     // Our state
     bool show_demo_window = true;
     bool show_another_window = false;
@@ -98,6 +105,10 @@ int main(int, char**)
         if (show_demo_window)
             ImGui::ShowDemoWindow(&show_demo_window);
 
+
+        if (show_in_game_browser_window)
+            ImGui::ShowBrowserWindow(&show_in_game_browser_window, ImGui_ImplSDL2_GetCefTexture());
+            
         // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
         {
             static float f = 0.0f;
@@ -108,6 +119,7 @@ int main(int, char**)
             ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
             ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
             ImGui::Checkbox("Another Window", &show_another_window);
+            ImGui::Checkbox("In Game Browser", &show_in_game_browser_window);            
 
             ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
             ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
@@ -150,5 +162,6 @@ int main(int, char**)
     SDL_DestroyWindow(window);
     SDL_Quit();
 
+    CefShutdown();
     return 0;
 }

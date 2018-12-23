@@ -27,3 +27,7 @@ IMGUI_IMPL_API bool     ImGui_ImplSDL2_InitForMetal(SDL_Window* window);
 IMGUI_IMPL_API void     ImGui_ImplSDL2_Shutdown();
 IMGUI_IMPL_API void     ImGui_ImplSDL2_NewFrame(SDL_Window* window);
 IMGUI_IMPL_API bool     ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event);
+
+// CEF
+IMGUI_IMPL_API int      ImGui_ImplSDL2_CefInit(int argc, char** argv);
+IMGUI_IMPL_API ImTextureID ImGui_ImplSDL2_GetCefTexture();

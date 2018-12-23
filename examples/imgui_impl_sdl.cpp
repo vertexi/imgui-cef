@@ -189,6 +189,46 @@ static bool ImGui_ImplSDL2_Init(SDL_Window* window)
     (void)window;
 #endif
 
+    // create texture for CEF
+    int width = 800;
+    int height = 600;
+
+    // Upload texture to graphics system
+    GLint last_texture;
+    glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
+    glGenTextures(1, &g_CefTexture);
+    glBindTexture(GL_TEXTURE_2D, g_CefTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+
+    // Restore state
+    glBindTexture(GL_TEXTURE_2D, last_texture);
+
+    //if(0)
+    {
+        renderHandler = new RenderHandler(width, height);
+        
+        CefWindowInfo window_info;
+        CefBrowserSettings browserSettings;
+
+        // browserSettings.windowless_frame_rate = 60; // 30 is default
+        window_info.SetAsWindowless(NULL); // false means no transparency (site background colour)
+        browserClient = new BrowserClient(renderHandler);
+        browser = CefBrowserHost::CreateBrowserSync(window_info, browserClient.get(), "http://www.google.com", browserSettings, nullptr);
+
+        // inject user-input by calling - non-trivial for non-windows - checkout the cefclient source and the platform specific cpp, like cefclient_osr_widget_gtk.cpp for linux
+        // browser->GetHost()->SendKeyEvent(...);
+        // browser->GetHost()->SendMouseMoveEvent(...);
+        // browser->GetHost()->SendMouseClickEvent(...);
+        // browser->GetHost()->SendMouseWheelEvent(...);
+       
+        //bool shutdown = false;
+        //bool js_executed = false;
+    }
+
+
     return true;
 }
 
@@ -232,6 +272,12 @@ void ImGui_ImplSDL2_Shutdown()
     for (ImGuiMouseCursor cursor_n = 0; cursor_n < ImGuiMouseCursor_COUNT; cursor_n++)
         SDL_FreeCursor(g_MouseCursors[cursor_n]);
     memset(g_MouseCursors, 0, sizeof(g_MouseCursors));
+
+
+    browser = nullptr;
+    browserClient = nullptr;
+    renderHandler = nullptr;
+    
 }
 
 static void ImGui_ImplSDL2_UpdateMousePosAndButtons()
@@ -342,6 +388,9 @@ static void ImGui_ImplSDL2_UpdateGamepads()
 
 void ImGui_ImplSDL2_NewFrame(SDL_Window* window)
 {
+	// let browser process events
+    CefDoMessageLoopWork();
+
     ImGuiIO& io = ImGui::GetIO();
     IM_ASSERT(io.Fonts->IsBuilt() && "Font atlas not built! It is generally built by the renderer back-end. Missing call to renderer _NewFrame() function? e.g. ImGui_ImplOpenGL3_NewFrame().");
 
@@ -367,4 +416,9 @@ void ImGui_ImplSDL2_NewFrame(SDL_Window* window)
 
     // Update game controllers (if enabled and available)
     ImGui_ImplSDL2_UpdateGamepads();
+}
+
+ImTextureID ImGui_ImplSDL2_GetCefTexture()
+{
+    return (ImTextureID)(intptr_t)g_CefTexture;
 }
