@@ -264,6 +264,7 @@ namespace ImGui
 
     // CEF
     IMGUI_API void          ShowBrowserWindow(bool* p_open = NULL, ImTextureID tex_id = NULL);
+    IMGUI_API void          UpdateBrowserMouse(ImVec2 windowPos, ImVec2 cursorPos);
 
     // Styles
     IMGUI_API void          StyleColorsDark(ImGuiStyle* dst = NULL);    // new, recommended style (default)

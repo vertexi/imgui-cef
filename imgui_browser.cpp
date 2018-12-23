@@ -103,7 +103,7 @@ void ImGui::ShowBrowserWindow(bool* p_open, ImTextureID tex_id)
     ImGui::Spacing();
 
 
-    static char AddressURL[500] = "https://google.com";
+    static char AddressURL[500] = "http://localhost/mousetest.html";
 
     ImGui::Text("Address:");
     ImGui::SameLine();
@@ -116,8 +116,19 @@ void ImGui::ShowBrowserWindow(bool* p_open, ImTextureID tex_id)
         float my_tex_w = 800.0f;
         float my_tex_h = 600.0f;
 
-        ImGui::Text("%.0fx%.0f", my_tex_w, my_tex_h);
-        ImGui::Image(my_tex_id, ImVec2(my_tex_w, my_tex_h), ImVec2(0, 0), ImVec2(1, 1), ImColor(255, 255, 255, 255), ImColor(255, 255, 255, 128));
+ 
+        ImVec2 curpos = ImGui::GetCursorPos();
+        ImVec2 winpos = ImGui::GetWindowPos();
+        ImGui::ImageButton(my_tex_id, ImVec2(my_tex_w, my_tex_h), ImVec2(0, 0), ImVec2(1, 1), ImColor(255, 255, 255, 255), ImColor(255, 255, 255, 128));
+        //if (ImGui::IsItemHovered())
+        {
+            UpdateBrowserMouse(winpos, curpos);
+            // process mouse data
+            // cancel all mouse event
+        }
+
+
+
     }
 
 
