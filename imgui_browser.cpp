@@ -103,12 +103,17 @@ void ImGui::ShowBrowserWindow(bool* p_open, ImTextureID tex_id)
     ImGui::Spacing();
 
 
-    static char AddressURL[500] = "http://localhost/mousetest.html";
+    static char AddressURL[500] = "https://www.google.com";
 
     ImGui::Text("Address:");
     ImGui::SameLine();
     ImGui::InputText("", AddressURL, IM_ARRAYSIZE(AddressURL));
-
+    ImGui::SameLine();
+    if (ImGui::Button("Go"))
+    {
+        // switch the url
+        ImGui::ChangeBrowserURL(AddressURL);
+    }
 
     if (tex_id != nullptr)
     {

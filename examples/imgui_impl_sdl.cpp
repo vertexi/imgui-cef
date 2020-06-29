@@ -50,9 +50,21 @@
 // SDL
 #include <SDL.h>
 #include <SDL_syswm.h>
+#include <SDL_keyboard.h>
 #if defined(__APPLE__)
 #include "TargetConditionals.h"
 #endif
+#include "sdl_keyboard_utils.h"
+
+// OpenGL
+#include <GL/GL.h>
+
+// CEF
+#include <cef_app.h>
+#include "include/cef_client.h"
+#include "include/cef_task.h"
+#include "include/wrapper/cef_helpers.h"
+
 
 #define SDL_HAS_CAPTURE_AND_GLOBAL_MOUSE    SDL_VERSION_ATLEAST(2,0,4)
 #define SDL_HAS_VULKAN                      SDL_VERSION_ATLEAST(2,0,6)
@@ -63,6 +75,7 @@ static Uint64       g_Time = 0;
 static bool         g_MousePressed[3] = { false, false, false };
 static SDL_Cursor*  g_MouseCursors[ImGuiMouseCursor_COUNT] = {};
 static char*        g_ClipboardTextData = NULL;
+static bool         g_MouseCanUseGlobalState = true;
 
 // OpenGL Data
 static GLuint       g_CefTexture = 0;
@@ -539,7 +552,7 @@ static bool ImGui_ImplSDL2_Init(SDL_Window* window)
         // browserSettings.windowless_frame_rate = 60; // 30 is default
         window_info.SetAsWindowless(NULL); // false means no transparency (site background colour)
         browserClient = new BrowserClient(renderHandler);
-        browser = CefBrowserHost::CreateBrowserSync(window_info, browserClient.get(), "http://localhost/mousetest.html", browserSettings, nullptr);
+        browser = CefBrowserHost::CreateBrowserSync(window_info, browserClient.get(), "https://google.com", browserSettings, nullptr);
 
         // inject user-input by calling - non-trivial for non-windows - checkout the cefclient source and the platform specific cpp, like cefclient_osr_widget_gtk.cpp for linux
         // browser->GetHost()->SendKeyEvent(...);
@@ -751,4 +764,11 @@ void ImGui_ImplSDL2_NewFrame(SDL_Window* window)
 ImTextureID ImGui_ImplSDL2_GetCefTexture()
 {
     return (ImTextureID)(intptr_t)g_CefTexture;
+}
+
+
+// not good
+void ImGui::ChangeBrowserURL(char* URL)
+{
+    browser->GetMainFrame()->LoadURL(CefString(URL));
 }

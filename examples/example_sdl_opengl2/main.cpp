@@ -15,7 +15,7 @@
 #include <cef_app.h>
 
 // Main code
-int main(int, char**)
+int main(int argc, char** argv)
 {
     // Setup CEF
     int cefResult = ImGui_ImplSDL2_CefInit(argc, argv);
