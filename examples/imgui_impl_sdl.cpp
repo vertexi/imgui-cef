@@ -61,9 +61,9 @@
 
 // CEF
 #include <cef_app.h>
-#include "include/cef_client.h"
-#include "include/cef_task.h"
-#include "include/wrapper/cef_helpers.h"
+#include <cef_client.h>
+#include <cef_task.h>
+#include <wrapper/cef_helpers.h>
 
 
 #define SDL_HAS_CAPTURE_AND_GLOBAL_MOUSE    SDL_VERSION_ATLEAST(2,0,4)
@@ -89,18 +89,12 @@ public:
     RenderHandler(int w, int h) :
         width(w),
         height(h)
-        //renderer(renderer)
     {
-        //texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_UNKNOWN, SDL_TEXTUREACCESS_STREAMING, w, h);
     }
 
     ~RenderHandler()
     {
-        //if (texture)
-        //{
-        //    SDL_DestroyTexture(texture);
-        //}
-        //renderer = nullptr;
+
     }
 
     void GetViewRect(CefRefPtr<CefBrowser> browser, CefRect &rect)
@@ -112,31 +106,17 @@ public:
     {
         //if (texture)
         {
-            //unsigned char * texture_data = NULL;
-            //int texture_pitch = 0;
-
-            //SDL_LockTexture(texture, 0, (void **)&texture_data, &texture_pitch);
-            //memcpy(texture_data, buffer, w * h * 4);
-            //SDL_UnlockTexture(texture);
-
-#define GL_BGRA_EXT 0x80E1
+            #define GL_BGRA_EXT 0x80E1
             glBindTexture(GL_TEXTURE_2D, g_CefTexture);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, buffer);
-
         }
     }
 
     void resize(int w, int h)
     {
-        //if (texture)
-        //{
-        //    SDL_DestroyTexture(texture);
-        //}
-
-        //texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_UNKNOWN, SDL_TEXTUREACCESS_STREAMING, w, h);
         width = w;
         height = h;
     }
@@ -149,8 +129,6 @@ public:
 public:
     int width;
     int height;
-    //SDL_Renderer * renderer = nullptr;
-    //SDL_Texture * texture = nullptr;
 
     IMPLEMENT_REFCOUNTING(RenderHandler);
 };

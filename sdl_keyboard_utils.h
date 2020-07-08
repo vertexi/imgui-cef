@@ -2,7 +2,7 @@
 #define _KEYBOARD_UTILS_H_
 
 #include <SDL.h>
-#include <include/internal/cef_types.h>
+#include <internal/cef_types.h>
 
 int getKeyboardModifiers(uint16_t const mod)
 {

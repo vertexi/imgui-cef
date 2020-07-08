@@ -67,40 +67,25 @@ void ImGui::ShowBrowserWindow(bool* p_open, ImTextureID tex_id)
         return;
     }
 
-    // Menu
-    if (ImGui::BeginMenuBar())
-    {
-        if (ImGui::BeginMenu("Menu"))
-        {
-            //ShowExampleMenuFile();
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("Examples"))
-        {
-            //ImGui::MenuItem("Main menu bar", NULL, &show_app_main_menu_bar);
-            //ImGui::MenuItem("Console", NULL, &show_app_console);
-            //ImGui::MenuItem("Log", NULL, &show_app_log);
-            //ImGui::MenuItem("Simple layout", NULL, &show_app_layout);
-            //ImGui::MenuItem("Property editor", NULL, &show_app_property_editor);
-            //ImGui::MenuItem("Long text display", NULL, &show_app_long_text);
-            //ImGui::MenuItem("Auto-resizing window", NULL, &show_app_auto_resize);
-            //ImGui::MenuItem("Constrained-resizing window", NULL, &show_app_constrained_resize);
-            //ImGui::MenuItem("Simple overlay", NULL, &show_app_simple_overlay);
-            //ImGui::MenuItem("Manipulating window titles", NULL, &show_app_window_titles);
-            //ImGui::MenuItem("Custom rendering", NULL, &show_app_custom_rendering);
-            //ImGui::MenuItem("Documents", NULL, &show_app_documents);
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("Help"))
-        {
-            //ImGui::MenuItem("Metrics", NULL, &show_app_metrics);
-            //ImGui::MenuItem("Style Editor", NULL, &show_app_style_editor);
-            //ImGui::MenuItem("About Dear ImGui", NULL, &show_app_about);
-            ImGui::EndMenu();
-        }
-        ImGui::EndMenuBar();
-    }
-    ImGui::Spacing();
+    //// Menu
+    //if (ImGui::BeginMenuBar())
+    //{
+    //    if (ImGui::BeginMenu("Menu"))
+    //    {
+    //        //ShowExampleMenuFile();
+    //        ImGui::EndMenu();
+    //    }
+    //    if (ImGui::BeginMenu("Examples"))
+    //    {
+    //        ImGui::EndMenu();
+    //    }
+    //    if (ImGui::BeginMenu("Help"))
+    //    {
+    //        ImGui::EndMenu();
+    //    }
+    //    ImGui::EndMenuBar();
+    //}
+    //ImGui::Spacing();
 
 
     static char AddressURL[500] = "https://www.google.com";
@@ -124,20 +109,16 @@ void ImGui::ShowBrowserWindow(bool* p_open, ImTextureID tex_id)
  
         ImVec2 curpos = ImGui::GetCursorPos();
         ImVec2 winpos = ImGui::GetWindowPos();
+
         ImGui::ImageButton(my_tex_id, ImVec2(my_tex_w, my_tex_h), ImVec2(0, 0), ImVec2(1, 1), ImColor(255, 255, 255, 255), ImColor(255, 255, 255, 128));
-        //if (ImGui::IsItemHovered())
+        if (ImGui::IsItemHovered())
         {
             UpdateBrowserMouse(winpos, curpos);
             // process mouse data
             // cancel all mouse event
         }
 
-
-
     }
-
-
-
     // End of ShowDemoWindow()
     ImGui::End();
 }
