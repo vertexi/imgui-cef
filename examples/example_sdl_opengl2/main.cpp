@@ -108,7 +108,7 @@ int main(int argc, char** argv)
 
         if (show_in_game_browser_window)
             ImGui::ShowBrowserWindow(&show_in_game_browser_window, ImGui_ImplSDL2_GetCefTexture());
-            
+
         // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
         {
             static float f = 0.0f;
@@ -119,7 +119,7 @@ int main(int argc, char** argv)
             ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
             ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
             ImGui::Checkbox("Another Window", &show_another_window);
-            ImGui::Checkbox("In Game Browser", &show_in_game_browser_window);            
+            ImGui::Checkbox("In Game Browser", &show_in_game_browser_window);
 
             ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
             ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color

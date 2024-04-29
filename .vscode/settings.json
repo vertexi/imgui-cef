@@ -1,0 +1,14 @@
+{
+    "C_Cpp.intelliSenseEngine": "disabled",
+    "clangd.path": "clangd",
+    "clangd.arguments": [
+                        // "-log=verbose",
+                        // "-pretty",
+                        "--background-index",
+                        "--query-driver=cl", //for cross compile usage
+                        "--compile-commands-dir=${workspaceFolder}/build",
+                        "-j=8",
+                    //  "--malloc-trim",
+                        "--pch-storage=memory",
+                        "--clang-tidy=false"],
+}

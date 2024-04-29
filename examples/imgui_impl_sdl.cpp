@@ -750,3 +750,8 @@ void ImGui::ChangeBrowserURL(char* URL)
 {
     browser->GetMainFrame()->LoadURL(CefString(URL));
 }
+
+void ImGui::loadString(const char* str)
+{
+    browser->GetMainFrame()->LoadString(CefString(str), CefString("https://google.com"));
+}
