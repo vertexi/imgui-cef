@@ -4,9 +4,9 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" CACHE STR
 
 # set c++ standard
 set(CMAKE_VERBOSE_MAKEFILE ON)
-# set(CMAKE_CXX_STANDARD 20)
-# set(CMAKE_CXX_STANDARD_REQUIRED ON)
-# set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 project(imbrowser)
 
@@ -14,7 +14,9 @@ add_library(imgui STATIC
     ${CMAKE_CURRENT_LIST_DIR}/imgui.cpp
     ${CMAKE_CURRENT_LIST_DIR}/imgui_demo.cpp
     ${CMAKE_CURRENT_LIST_DIR}/imgui_draw.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/imgui_widgets.cpp)
+    ${CMAKE_CURRENT_LIST_DIR}/imgui_widgets.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/whereami.c
+    ${CMAKE_CURRENT_LIST_DIR}/whereami.h)
 
 target_sources(imgui PRIVATE ${CMAKE_CURRENT_LIST_DIR}/imgui_browser.cpp)
 

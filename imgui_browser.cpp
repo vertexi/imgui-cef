@@ -1,4 +1,5 @@
 
+#include <cstring>
 #if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_WARNINGS)
 #define _CRT_SECURE_NO_WARNINGS
 #endif
@@ -47,71 +48,63 @@
 #endif
 
 
+#include <filesystem>
+#include "whereami.h"
 
+static char texString[65536] = R"()";
 
-
+void ImGui::setTexString(const char* tex)
+{
+    std::strcpy(texString, tex);
+}
 
 void ImGui::ShowBrowserWindow(bool* p_open, ImTextureID tex_id)
 {
     // We specify a default position/size in case there's no data in the .ini file. Typically this isn't required! We only do it to make the Demo applications a little more welcoming.
-    ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(ImVec2(680, 680), ImGuiCond_FirstUseEver);
+    // ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
+    // ImGui::SetNextWindowSize(ImVec2(680, 680), ImGuiCond_FirstUseEver);
 
-    ImGuiWindowFlags window_flags = 0;
-    window_flags |= ImGuiWindowFlags_MenuBar;
+    // ImGuiWindowFlags window_flags = 0;
 
-    if (!ImGui::Begin("ImGui Browser", p_open, window_flags))
+    // if (!ImGui::Begin("ImGui Browser", p_open, window_flags))
+    // {
+    //     // Early out if the window is collapsed, as an optimization.
+    //     ImGui::End();
+    //     return;
+    // }
+
+    static bool first_run = true;
+    static char AddressURL[500] = R"(file://./mathrender.html)";
+    if (first_run)
     {
-        // Early out if the window is collapsed, as an optimization.
-        ImGui::End();
-        return;
-    }
-
-    //// Menu
-    //if (ImGui::BeginMenuBar())
-    //{
-    //    if (ImGui::BeginMenu("Menu"))
-    //    {
-    //        //ShowExampleMenuFile();
-    //        ImGui::EndMenu();
-    //    }
-    //    if (ImGui::BeginMenu("Examples"))
-    //    {
-    //        ImGui::EndMenu();
-    //    }
-    //    if (ImGui::BeginMenu("Help"))
-    //    {
-    //        ImGui::EndMenu();
-    //    }
-    //    ImGui::EndMenuBar();
-    //}
-    //ImGui::Spacing();
-
-
-    static char AddressURL[500] = "https://www.google.com";
-
-    ImGui::Text("Address:");
-    ImGui::SameLine();
-    ImGui::InputText("", AddressURL, IM_ARRAYSIZE(AddressURL));
-    ImGui::SameLine();
-    if (ImGui::Button("Go"))
-    {
-        // switch the url
+        wai_getExecutablePath(AddressURL, IM_ARRAYSIZE(AddressURL), NULL);
+        std::filesystem::path targetPath(AddressURL);
+        targetPath = targetPath.parent_path().append("mathrender.html");
+        auto targetURLStr = "file://" + targetPath.generic_string();
+        std::strcpy(AddressURL, targetURLStr.c_str());
         ImGui::ChangeBrowserURL(AddressURL);
+        first_run = false;
     }
-    ImGui::SameLine();
-    if (ImGui::Button("Load"))
+
+    static char texStringPrev[65536] = "";
+    ImGui::InputTextMultiline("Tex", texString, IM_ARRAYSIZE(texString), ImVec2(ImGui::GetContentRegionAvail().x - 10, 100));
+    static char JSString[70000] = R"( setTex(" )";
+    if (std::strcmp(texString, texStringPrev) != 0)
     {
-        ImGui::loadString("<html><body>Hello!</body></html>");
+        std::strcpy(texStringPrev, texString);
+        std::strcpy(JSString, R"( setTex(String.raw` )");
+        std::strcat(JSString, texString);
+        std::strcat(JSString, R"( `) )");
+        ImGui::loadJS(JSString);
     }
 
     if (tex_id != nullptr)
     {
         ImTextureID my_tex_id = tex_id;
-        float my_tex_w = 800.0f;
-        float my_tex_h = 600.0f;
+        float my_tex_w = ImGui::GetContentRegionAvail().x - 10;
+        float my_tex_h = 300.0f;
+        ImGui::broswerResize(my_tex_w, my_tex_h);
 
- 
         ImVec2 curpos = ImGui::GetCursorPos();
         ImVec2 winpos = ImGui::GetWindowPos();
 
@@ -125,5 +118,5 @@ void ImGui::ShowBrowserWindow(bool* p_open, ImTextureID tex_id)
 
     }
     // End of ShowDemoWindow()
-    ImGui::End();
+    // ImGui::End();
 }

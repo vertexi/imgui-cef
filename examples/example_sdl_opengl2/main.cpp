@@ -9,10 +9,68 @@
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl2.h"
+#include <SDL_hints.h>
+#include <SDL_video.h>
 #include <stdio.h>
 #include <SDL.h>
 #include <SDL_opengl.h>
 #include <cef_app.h>
+
+#include "clip.h"
+#include <iostream>
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+#include <zmq.hpp>
+
+static ImGuiWindowFlags WindowFlagsNothing()
+{
+    ImGuiWindowFlags window_flags = 0;
+    window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
+                    ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings;
+    window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+    return window_flags;
+}
+
+ImVec2 ImageProportionalSize(const ImVec2& askedSize, const ImVec2& imageSize)
+{
+    ImVec2 r(askedSize);
+
+    if ((r.x == 0.f) && (r.y == 0.f))
+        r = imageSize;
+    else if (r.y == 0.f)
+        r.y = imageSize.y / imageSize.x * r.x;
+    else if (r.x == 0.f)
+        r.x = imageSize.x / imageSize.y * r.y;
+    return r;
+}
+
+GLuint pic_tex_id = 0;
+void impl_StoreTexture(int width, int height, unsigned char* image_data_rgba, int image_type)
+{
+    // it's ok to just delete 0's texture
+    glDeleteTextures(1, &pic_tex_id);
+
+    glGenTextures(1, &pic_tex_id);
+    glBindTexture(GL_TEXTURE_2D, pic_tex_id);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+#if defined(HELLOIMGUI_USE_GLES2) || defined(HELLOIMGUI_USE_GLES3)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+#endif
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
+                    width,
+                    height, 0, image_type, GL_UNSIGNED_BYTE, image_data_rgba);
+}
+
+void png_copy(void *socket_, void *data, int size) {
+    zmq::message_t request (size);
+    memcpy(request.data(), data, size);
+    std::cout << "Sending Image " << std::endl;
+    zmq::socket_t *socket = (zmq::socket_t *)socket_;
+    socket->send (request, zmq::send_flags::none);
+}
 
 // Main code
 int main(int argc, char** argv)
@@ -75,9 +133,21 @@ int main(int argc, char** argv)
 
     bool show_in_game_browser_window = true;
     // Our state
-    bool show_demo_window = false;
-    bool show_another_window = false;
+    // bool show_demo_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
+    //  Prepare our context and socket
+    zmq::context_t context (1);
+    zmq::socket_t socket (context, zmq::socket_type::req);
+    zmq::socket_t control_socket (context, zmq::socket_type::req);
+
+    std::cout << "Connecting to hello world server..." << std::endl;
+    socket.connect ("tcp://localhost:8848");
+    control_socket.connect ("tcp://localhost:8849");
+
+    zmq_pollitem_t items[] = {
+        {socket,  0,  ZMQ_POLLIN,     0},
+    };
 
     // Main loop
     bool done = false;
@@ -95,53 +165,109 @@ int main(int argc, char** argv)
             if (event.type == SDL_QUIT)
                 done = true;
         }
+        zmq_poll(items, IM_ARRAYSIZE(items), 0);
 
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL2_NewFrame();
         ImGui_ImplSDL2_NewFrame(window);
         ImGui::NewFrame();
 
-        // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
-        if (show_demo_window)
-            ImGui::ShowDemoWindow(&show_demo_window);
+        int windowW, windowH;
+        SDL_GetWindowSize(window, &windowW, &windowH);
+        ImGui::SetNextWindowPos(ImVec2(0, 0));
+        ImGui::SetNextWindowSize(ImVec2(windowW, windowH));
 
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+        static bool p_open = true;
+        std::string windowTitle = "Main window (title bar invisible)";
+        ImGui::Begin(windowTitle.c_str(), &p_open, WindowFlagsNothing());
+        ImGui::PopStyleVar(3);
 
-        if (show_in_game_browser_window)
-            ImGui::ShowBrowserWindow(&show_in_game_browser_window, ImGui_ImplSDL2_GetCefTexture());
+        // // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
+        // if (show_demo_window)
+        //     ImGui::ShowDemoWindow(&show_demo_window);
 
-        // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
         {
-            static float f = 0.0f;
-            static int counter = 0;
-
-            ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
-
-            ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-            ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-            ImGui::Checkbox("Another Window", &show_another_window);
-            ImGui::Checkbox("In Game Browser", &show_in_game_browser_window);
-
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-            ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-
-            if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-                counter++;
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
-
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-            ImGui::End();
+            static std::string value;
+            static clip::image image;
+            static bool update_image = false;
+            static bool wait_reply = false;
+            if (ImGui::Button("Show clipboard"))
+            {
+                if (!clip::get_text(value))
+                {
+                    value = "Could not get clipboard text";
+                    if (!clip::get_image(image)) {
+                        value = "Could not get clipboard image";
+                    } else {
+                        update_image = true;
+                        wait_reply = true;
+                        auto imageDataSize = image.spec().required_data_size();
+                        auto imageData = image.data();
+                        IM_ASSERT(image.spec().bits_per_pixel / 8 == 4);
+                        for (unsigned int i = 0; i < imageDataSize / 4; i++)
+                        {
+                            std::swap(imageData[i * 4 + 0], imageData[i * 4 + 2]);
+                        }
+                        stbi_write_png_to_func(png_copy, &socket, image.spec().width, image.spec().height, 4, (void *)imageData, image.spec().bytes_per_row);
+                    }
+                }
+            }
+            ImGui::Text("%s", value.c_str());
+            static ImVec2 imageDispSize;
+            if (update_image) {
+                impl_StoreTexture(image.spec().width, image.spec().height, (unsigned char *)image.data(), GL_RGBA);
+                auto imageSize = ImVec2(image.spec().width, image.spec().height);
+                imageDispSize = ImageProportionalSize(ImVec2(image.spec().width, image.spec().height), imageSize);
+                update_image = false;
+            }
+            if (wait_reply && items[0].revents & ZMQ_POLLIN) {
+                zmq::message_t reply;
+                auto size = socket.recv (reply, zmq::recv_flags::none);
+                if(size != -1)
+                {
+                    std::cout << "receive ok." << std::endl;
+                    std::cout << reply.to_string() << std::endl;
+                    ImGui::setTexString(reply.to_string().c_str());
+                }
+                wait_reply = false;
+            }
+            if (imageDispSize.x != 0)
+            {
+                ImGui::Image((void *)(intptr_t)pic_tex_id, imageDispSize);
+            }
+            if (ImGui::Button("Set clipboard"))
+            {
+                clip::set_text("Hello clipboard!");
+            }
         }
 
-        // 3. Show another simple window.
-        if (show_another_window)
-        {
-            ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-            ImGui::Text("Hello from another window!");
-            if (ImGui::Button("Close Me"))
-                show_another_window = false;
-            ImGui::End();
-        }
+        ImGui::ShowBrowserWindow(&show_in_game_browser_window, ImGui_ImplSDL2_GetCefTexture());
+        ImGui::End();
+
+        // // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
+        // {
+        //     static float f = 0.0f;
+        //     static int counter = 0;
+
+        //     ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+
+        //     ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
+
+        //     ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+        //     ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+
+        //     if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
+        //         counter++;
+        //     ImGui::SameLine();
+        //     ImGui::Text("counter = %d", counter);
+
+        //     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+        //     ImGui::End();
+        // }
+
 
         // Rendering
         ImGui::Render();
@@ -153,6 +279,10 @@ int main(int argc, char** argv)
         SDL_GL_SwapWindow(window);
     }
 
+    zmq::message_t request (10);
+    memcpy(request.data(), "quit", 10);
+    control_socket.send(request);
+
     // Cleanup
     ImGui_ImplOpenGL2_Shutdown();
     ImGui_ImplSDL2_Shutdown();
@@ -163,5 +293,8 @@ int main(int argc, char** argv)
     SDL_Quit();
 
     CefShutdown();
+
+    socket.close();
+    control_socket.close();
     return 0;
 }

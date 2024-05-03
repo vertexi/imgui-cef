@@ -3,6 +3,12 @@
     "version": "0.0",
     "dependencies": [
       "sdl2",
-      "opengl"
+      "opengl",
+      {
+        "name": "zeromq",
+        "features": ["websockets"]
+      },
+      "cppzmq",
+      "stb"
     ]
 }

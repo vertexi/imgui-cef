@@ -1,0 +1,3 @@
+[submodule "examples/example_sdl_opengl2/clip"]
+	path = examples/example_sdl_opengl2/clip
+	url = https://github.com/dacap/clip.git

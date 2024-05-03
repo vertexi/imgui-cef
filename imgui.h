@@ -267,6 +267,9 @@ namespace ImGui
     IMGUI_API void          UpdateBrowserMouse(ImVec2 windowPos, ImVec2 cursorPos);
     IMGUI_API void          ChangeBrowserURL(char* URL);
     IMGUI_API void          loadString(const char* str);
+    IMGUI_API void          loadJS(const char* str);
+    IMGUI_API void          broswerResize(int w, int h);
+    IMGUI_API void          setTexString(const char* tex);
 
     // Styles
     IMGUI_API void          StyleColorsDark(ImGuiStyle* dst = NULL);    // new, recommended style (default)

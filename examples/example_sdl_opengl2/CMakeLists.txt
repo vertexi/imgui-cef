@@ -55,3 +55,27 @@ target_link_libraries(${CEF_TARGET} PRIVATE
                     SDL2::SDL2-static
                     imgui
                     OpenGL::GL)
+
+add_custom_command(TARGET ${CEF_TARGET}
+  PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy
+  ${CMAKE_CURRENT_LIST_DIR}/mathrender.html
+  $<TARGET_FILE_DIR:${CEF_TARGET}>/mathrender.html)
+
+# Disable clip examples and tests
+set(CLIP_EXAMPLES OFF CACHE BOOL "Compile clip examples")
+set(CLIP_TESTS OFF CACHE BOOL "Compile clip tests")
+set(CLIP_LIB_HEADER_FOLDER ${CMAKE_CURRENT_LIST_DIR}/clip CACHE STRING "Folder where to find clip library headers")
+
+# In case that you have ${PNG_LIBRARY} set to support copy/paste images on Linux
+#set(CLIP_X11_PNG_LIBRARY "${PNG_LIBRARY}")
+
+# Add clip subdirectory to compile the library
+add_subdirectory(clip)
+
+
+target_link_libraries(${CEF_TARGET} PRIVATE clip)
+target_include_directories(${CEF_TARGET} PRIVATE ${CLIP_LIB_HEADER_FOLDER})
+
+find_package(cppzmq CONFIG REQUIRED)
+target_link_libraries(${CEF_TARGET} PRIVATE cppzmq)
+target_include_directories(${CEF_TARGET} PRIVATE ${Stb_INCLUDE_DIR})

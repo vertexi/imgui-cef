@@ -50,5 +50,6 @@ examples/example_sdl_opengl3/example_sdl_opengl3
 
 build/
 .cache/
-thirdparty/
-
+thirdparty/cef
+*.build/
+*.dist/

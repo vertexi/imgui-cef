@@ -523,7 +523,7 @@ static bool ImGui_ImplSDL2_Init(SDL_Window* window)
     //if(0)
     {
         renderHandler = new RenderHandler(width, height);
-        
+
         CefWindowInfo window_info;
         CefBrowserSettings browserSettings;
 
@@ -753,5 +753,16 @@ void ImGui::ChangeBrowserURL(char* URL)
 
 void ImGui::loadString(const char* str)
 {
-    browser->GetMainFrame()->LoadString(CefString(str), CefString("https://google.com"));
+    browser->GetMainFrame()->LoadString(CefString(str), CefString("https://texocr.com"));
+}
+
+void ImGui::loadJS(const char* str)
+{
+    printf("loadJS: %s\n", str);
+    browser->GetMainFrame()->ExecuteJavaScript(CefString(str), CefString("https://texocr.com"), 1);
+}
+
+void ImGui::broswerResize(int w, int h)
+{
+    renderHandler->resize(w, h);
 }
