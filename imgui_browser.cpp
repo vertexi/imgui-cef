@@ -58,6 +58,11 @@ void ImGui::setTexString(const char* tex)
     std::strcpy(texString, tex);
 }
 
+char* ImGui::getTexString()
+{
+    return texString;
+}
+
 void ImGui::ShowBrowserWindow(bool* p_open, ImTextureID tex_id)
 {
     // We specify a default position/size in case there's no data in the .ini file. Typically this isn't required! We only do it to make the Demo applications a little more welcoming.

@@ -270,6 +270,7 @@ namespace ImGui
     IMGUI_API void          loadJS(const char* str);
     IMGUI_API void          broswerResize(int w, int h);
     IMGUI_API void          setTexString(const char* tex);
+    IMGUI_API char*         getTexString();
 
     // Styles
     IMGUI_API void          StyleColorsDark(ImGuiStyle* dst = NULL);    // new, recommended style (default)

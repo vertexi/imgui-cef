@@ -22,14 +22,14 @@ datas += copy_metadata('torch')
 datas += collect_data_files('transformers', include_py_files=True, includes=['**/*.py'])
 datas += collect_data_files('tokenizers', include_py_files=True, includes=['**/*.py'])
 datas += collect_data_files('torch', include_py_files=True, includes=['**/*.py'])
-
+datas +=  [('./onnx', './onnx')]
 
 block_cipher = None
 
 
 a = Analysis(
     ['texocr_pix2tex.py'],
-    pathex=["C:\\Users\\Apoptosis\\.conda\\envs\\texocr\\Lib\\site-packages", "C:\\Users\\Apoptosis\\.conda\\envs\\texocr\\Lib"],
+    pathex=[],
     binaries=binaries,
     datas=datas,
     hiddenimports=[],

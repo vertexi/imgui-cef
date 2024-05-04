@@ -11,6 +11,7 @@
 #include "imgui_impl_opengl2.h"
 #include <SDL_hints.h>
 #include <SDL_video.h>
+#include <cstdlib>
 #include <stdio.h>
 #include <SDL.h>
 #include <SDL_opengl.h>
@@ -72,6 +73,33 @@ void png_copy(void *socket_, void *data, int size) {
     socket->send (request, zmq::send_flags::none);
 }
 
+#include <cstdlib>
+#include <filesystem>
+#include "whereami.h"
+#include <thread>
+
+class texOCRThread {
+public:
+    texOCRThread() : texOCR{} {
+        texOCR = std::thread{&texOCRThread::texOCRThreadEx, this};
+    }
+    ~texOCRThread() {
+        texOCR.join();
+    }
+private:
+    std::thread texOCR;
+    void texOCRThreadEx() {
+        char texOCRExecPath[500] = "";
+        wai_getExecutablePath(texOCRExecPath, IM_ARRAYSIZE(texOCRExecPath), NULL);
+        std::filesystem::path targetPath(texOCRExecPath);
+        targetPath = targetPath.parent_path().append("texocr_pix2tex").append("texocr_pix2tex.exe");
+        std::cout << "texocr_pix2tex.exe path: " << targetPath.generic_string().c_str() << std::endl;
+        std::strcpy(texOCRExecPath, "\"");
+        std::strcat(texOCRExecPath, targetPath.generic_string().c_str());
+        std::strcat(texOCRExecPath, "\"");
+        std::system(texOCRExecPath);
+    }
+};
 // Main code
 int main(int argc, char** argv)
 {
@@ -79,6 +107,8 @@ int main(int argc, char** argv)
     int cefResult = ImGui_ImplSDL2_CefInit(argc, argv);
     if (cefResult >= 0)
         return cefResult;
+
+    texOCRThread texOCRThread;
 
     // Setup SDL
     // (Some versions of SDL before <2.0.10 appears to have performance/stalling issues on a minority of Windows systems,
@@ -145,8 +175,15 @@ int main(int argc, char** argv)
     socket.connect ("tcp://localhost:8848");
     control_socket.connect ("tcp://localhost:8849");
 
+    {
+        zmq::message_t request (10);
+        memcpy(request.data(), "ready?", 10);
+        control_socket.send(request);
+    }
+
     zmq_pollitem_t items[] = {
         {socket,  0,  ZMQ_POLLIN,     0},
+        {control_socket,  0,  ZMQ_POLLIN,     0}
     };
 
     // Main loop
@@ -166,6 +203,19 @@ int main(int argc, char** argv)
                 done = true;
         }
         zmq_poll(items, IM_ARRAYSIZE(items), 0);
+
+        static bool texOCRReady = false;
+        if (!texOCRReady && items[1].revents & ZMQ_POLLIN)
+        {
+            zmq::message_t reply;
+            auto size = control_socket.recv (reply, zmq::recv_flags::none);
+            if(size != -1)
+            {
+                std::cout << "receive ready." << std::endl;
+                std::cout << reply.to_string() << std::endl;
+            }
+            texOCRReady = true;
+        }
 
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL2_NewFrame();
@@ -188,7 +238,7 @@ int main(int argc, char** argv)
         // // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
         // if (show_demo_window)
         //     ImGui::ShowDemoWindow(&show_demo_window);
-
+        if (texOCRReady)
         {
             static std::string value;
             static clip::image image;
@@ -240,11 +290,14 @@ int main(int argc, char** argv)
             }
             if (ImGui::Button("Set clipboard"))
             {
-                clip::set_text("Hello clipboard!");
+                clip::set_text(ImGui::getTexString());
             }
-        }
 
-        ImGui::ShowBrowserWindow(&show_in_game_browser_window, ImGui_ImplSDL2_GetCefTexture());
+
+            ImGui::ShowBrowserWindow(&show_in_game_browser_window, ImGui_ImplSDL2_GetCefTexture());
+        } else {
+            ImGui::Text("loading model.");
+        }
         ImGui::End();
 
         // // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
@@ -296,5 +349,6 @@ int main(int argc, char** argv)
 
     socket.close();
     control_socket.close();
+    context.shutdown();
     return 0;
 }
