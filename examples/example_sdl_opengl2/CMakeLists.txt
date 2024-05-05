@@ -1,4 +1,4 @@
-set(CEF_TARGET "example_sdl_opengl2")
+set(CEF_TARGET "texocr")
 
 add_executable(${CEF_TARGET}
     ${CMAKE_CURRENT_LIST_DIR}/main.cpp

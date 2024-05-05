@@ -126,7 +126,7 @@ int main(int argc, char** argv)
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
     SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-    SDL_Window* window = SDL_CreateWindow("Dear ImGui SDL2+OpenGL example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
+    SDL_Window* window = SDL_CreateWindow("TexOCR", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);
     SDL_GL_SetSwapInterval(1); // Enable vsync
@@ -244,7 +244,7 @@ int main(int argc, char** argv)
             static clip::image image;
             static bool update_image = false;
             static bool wait_reply = false;
-            if (ImGui::Button("Show clipboard"))
+            if (ImGui::Button("Convert formula from clipboard"))
             {
                 if (!clip::get_text(value))
                 {
@@ -288,7 +288,7 @@ int main(int argc, char** argv)
             {
                 ImGui::Image((void *)(intptr_t)pic_tex_id, imageDispSize);
             }
-            if (ImGui::Button("Set clipboard"))
+            if (ImGui::Button("copy Tex into clipboard"))
             {
                 clip::set_text(ImGui::getTexString());
             }
