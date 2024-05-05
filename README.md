@@ -37,6 +37,13 @@ build step:
 7. use cmake build the project with vcpkg
 8. copy the packaged texocr_pix2tex program into target build folder
 
+## Roadmap
+
+- [ ] hotkey
+- [ ] support rendering math formula in other font
+- [ ] support other platforms
+- [ ] trim down the dependencies and python package size
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.txt) file for details.
